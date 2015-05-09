@@ -1,5 +1,7 @@
 package org.owntracks.android.messages;
 
+import ch.bfh.fpelib.Key;
+
 import java.util.concurrent.TimeUnit;
 
 import org.json.JSONException;
@@ -140,6 +142,24 @@ public class LocationMessage extends Message{
 
         } catch (JSONException e) {
 
+        }
+        return json;
+    }
+
+    private static JSONObject fpeEncryption(JSONObject json) {
+        if (true) {
+            Key key = new Key(new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22});
+            byte[] tweak = new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22};
+            json = org.owntracks.android.support.FormatPreservingEncryption.encrypt(json, key, tweak);
+        }
+        return json;
+    }
+
+    private static JSONObject fpeDecryption(JSONObject json) {
+        if (true) {
+            Key key = new Key(new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22});
+            byte[] tweak = new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22};
+            json = org.owntracks.android.support.FormatPreservingEncryption.decrypt(json, key, tweak);
         }
         return json;
     }
