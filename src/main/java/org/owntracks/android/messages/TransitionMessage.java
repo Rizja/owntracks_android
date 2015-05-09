@@ -113,8 +113,8 @@ public class TransitionMessage extends Message{
             json.put("_type", "transition")
             .put("lat", this.waypoint.getLatitude())
             .put("lon", this.waypoint.getLongitude())
-            .put("tst", (TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis())
-                    .put("rad", Math.round(this.location.getLocation().getAccuracy() * 100) / 100.0d);
+            .put("tst", TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()))
+            .put("rad", Math.round(this.location.getLocation().getAccuracy() * 100) / 100.0d);
 
             if ((this.waypoint != null) && ((this.transition == Geofence.GEOFENCE_TRANSITION_EXIT) || (this.transition == Geofence.GEOFENCE_TRANSITION_ENTER))) {
                 if (this.waypoint.getShared())
