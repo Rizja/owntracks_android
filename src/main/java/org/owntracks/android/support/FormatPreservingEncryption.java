@@ -10,13 +10,25 @@ import ch.bfh.fpelib.messageSpace.StringMessageSpace;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import javax.crypto.Cipher;
+import javax.crypto.EncryptedPrivateKeyInfo;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class FormatPreservingEncryption {
@@ -128,6 +140,44 @@ public class FormatPreservingEncryption {
             }
         }
         return decryptedJson;
+    }
+
+    private static void loadPasswords() {
+
+
+    }
+    public static void storePassword(String username, String password) {
+        deletePassword(username); //First remove old password of user if exists, before storing the new one
+        HashSet<String> userPWs = new HashSet<String>(Preferences.getSharedPreferences().getStringSet("userPasswords", new HashSet<String>()));
+        userPWs.add(username + "$" + password);
+        Preferences.getSharedPreferences().edit().putStringSet("userPasswords", userPWs).commit();
+    }
+
+
+    public static void deletePassword(String username) {
+        HashSet<String> userPWs = new HashSet<String>(Preferences.getSharedPreferences().getStringSet("userPasswords", new HashSet<String>()));
+        for (String userPW : userPWs) {
+            if (userPW.contains(username)){
+                userPWs.remove(userPW);
+                break;
+            }
+        }
+        Preferences.getSharedPreferences().edit().putStringSet("userPasswords", userPWs).commit();
+    }
+
+
+    public static String loadPassword(String username) {
+        HashSet<String> userPWs = new HashSet<String>(Preferences.getSharedPreferences().getStringSet("userPasswords", new HashSet<String>()));
+        String password = "";
+
+        for (String userPW : userPWs) {
+            System.out.println("userPW: " + userPW);
+            if (userPW.contains(username)) {
+                password = userPW.substring(userPW.indexOf("$") + 1);
+               return password;
+            }
+        }
+        return null;
     }
 
 }

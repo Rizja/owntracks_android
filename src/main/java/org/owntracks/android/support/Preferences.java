@@ -2,6 +2,7 @@ package org.owntracks.android.support;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
@@ -68,6 +69,7 @@ public class Preferences {
     public static void setString(int resId, String value) {
         getSharedPreferences().edit().putString(getKey(resId), value).commit();
     }
+
 
     public static void setInt(int resId, int value) {
         getSharedPreferences().edit().putInt(getKey(resId), value).commit();
@@ -661,6 +663,11 @@ public class Preferences {
         setBoolean(R.string.keyAuth, auth);
     }
 
+    public static void setEnc(boolean encSpecifier) {
+        setBoolean(R.string.keyEnc, encSpecifier);
+    }
+
+
     public static void setTls(boolean tlsSpecifier) {
         setBoolean(R.string.keyTls, tlsSpecifier);
     }
@@ -687,6 +694,10 @@ public class Preferences {
 
     public static String getPassword() {
         return getString(R.string.keyPassword, R.string.valEmpty);
+    }
+
+    public static boolean getEnc() {
+        return getBoolean(R.string.keyEnc, R.bool.valEnc);
     }
 
     public static boolean getTls() {

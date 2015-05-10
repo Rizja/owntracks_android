@@ -169,6 +169,7 @@
     <string name="keyKeepalive">keepalive</string>
     <string name="keyPubRetain">pubRetain</string>
     <string name="keyCleanSession">cleanSession</string>
+    <string name="keyEnc">enc</string>
     <string name="keyTls">tls</string>
     <string name="keyTlsCrtPath">tlsCrtPath</string>
     <string name="keyLocatorDisplacement">locatorDisplacement</string>

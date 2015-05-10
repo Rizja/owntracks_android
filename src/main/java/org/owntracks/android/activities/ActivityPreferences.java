@@ -1,6 +1,7 @@
 package org.owntracks.android.activities;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,12 +19,14 @@ import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.Switch;
 
 import com.afollestad.materialdialogs.MaterialDialog;
@@ -40,7 +43,18 @@ import org.owntracks.android.services.ServiceProxy;
 import org.owntracks.android.support.ConnectionToolbarPreference;
 import org.owntracks.android.support.DrawerFactory;
 import org.owntracks.android.support.Events;
+import org.owntracks.android.support.FormatPreservingEncryption;
 import org.owntracks.android.support.Preferences;
+
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
+
+import javax.crypto.EncryptedPrivateKeyInfo;
+import javax.crypto.spec.SecretKeySpec;
 
 public class ActivityPreferences extends ActionBarActivity {
     @Override
@@ -152,13 +166,14 @@ public class ActivityPreferences extends ActionBarActivity {
         static String ver;
         private static SharedPreferences.OnSharedPreferenceChangeListener pubTopicListener;
         private static boolean tlsVal;
+        private static boolean encVal;
         private static boolean cleansessionVal;
         private static boolean authenticationVal;
 
 
 
 
-            @Override
+        @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             addPreferencesFromResource(R.xml.preferences);
@@ -196,7 +211,7 @@ public class ActivityPreferences extends ActionBarActivity {
             securityPreference = findPreference(getString(R.string.keySecurity));
             optionsPreference = findPreference(getString(R.string.keyOptions));
 
-                
+
             try {
                 ver = pm.getPackageInfo(a.getPackageName(), 0).versionName;
             } catch (PackageManager.NameNotFoundException e) {
@@ -418,6 +433,7 @@ public class ActivityPreferences extends ActionBarActivity {
             });
 
             tlsVal = Preferences.getTls();
+            encVal =  Preferences.getEnc();
             securityPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference preference) {
@@ -445,6 +461,49 @@ public class ActivityPreferences extends ActionBarActivity {
                                     });
 
 
+                                    final Switch enc = (Switch) d.findViewById(R.id.fpeEncryption);
+                                    enc.setChecked(encVal);
+                                    //final MaterialEditText fpePassword = (MaterialEditText) d.findViewById(R.id.fpePassword);
+                                    //fpePassword.setVisibility(encVal ? View.VISIBLE : View.GONE);
+                                    //enc.setText(Preferences.getTlsCrtPath());
+
+                                    enc.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                                        @Override
+                                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                            encVal = isChecked;
+                                            //fpePassword.setVisibility(encVal ? View.VISIBLE : View.GONE);
+
+                                            if(encVal) { //encryption enabled
+                                                final EditText input = new EditText(a);
+                                                input.setTransformationMethod(PasswordTransformationMethod.getInstance());
+
+                                                new AlertDialog.Builder(a)
+                                                        .setTitle("Password")
+                                                        .setMessage("Enter a password for the encryption:")
+                                                        .setView(input)
+                                                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                            public void onClick(DialogInterface dialog, int whichButton) {
+                                                                String  fpePassword = input.getText().toString();
+                                                                        if (fpePassword.isEmpty()) //if no password is entered, disable encryption
+                                                                            enc.setChecked(false);
+                                                                        else {
+                                                                            FormatPreservingEncryption.loadPassword("ownKey");
+                                                                            FormatPreservingEncryption.storePassword("ownKey", fpePassword);
+                                                                          //  FormatPreservingEncryption.deletePassword("ownKey");
+                                                                           FormatPreservingEncryption.loadPassword("ownKey");
+                                                                        }
+                                                            }
+                                                        })
+                                                        .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                                            public void onClick(DialogInterface dialog, int whichButton) {
+                                                                enc.setChecked(false); //if password entry is cancelled, disable encryption
+                                                    }
+                                                }).show();
+                                            }
+                                        }
+                                    });
+
+
                                 }
                             })
                             .callback(new MaterialDialog.ButtonCallback() {
@@ -452,12 +511,10 @@ public class ActivityPreferences extends ActionBarActivity {
                                 public void onPositive(MaterialDialog dialog) {
                                     MaterialDialog d = MaterialDialog.class.cast(dialog);
                                     MaterialEditText tlsCrt = (MaterialEditText) d.findViewById(R.id.tlsCrt);
-
+                                    Preferences.setEnc(encVal);
                                     Preferences.setTls(tlsVal);
                                     Preferences.setTlsCrtPath(tlsCrt.getText().toString());
-
                                     serverPreferenceToolbar.conditionallyEnableConnectButton();
-
                                 }
                             })
                             .show();
@@ -568,7 +625,5 @@ public class ActivityPreferences extends ActionBarActivity {
 
     }
 }
-
-
 
 

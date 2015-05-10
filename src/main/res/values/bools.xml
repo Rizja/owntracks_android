@@ -27,5 +27,6 @@
     <bool name="valBeaconRangingEnabled">false</bool>
     <bool name="valNotificationOnReceivedWaypointTransition">true</bool>
     <bool name="valTls">true</bool>
+    <bool name="valEnc">false</bool>
 
 </resources>

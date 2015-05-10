@@ -2,6 +2,7 @@ package org.owntracks.android.messages;
 
 import ch.bfh.fpelib.Key;
 
+import java.nio.charset.Charset;
 import java.util.concurrent.TimeUnit;
 
 import org.json.JSONException;
@@ -9,6 +10,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.owntracks.android.db.Waypoint;
 import org.owntracks.android.model.GeocodableLocation;
+import org.owntracks.android.support.FormatPreservingEncryption;
+import org.owntracks.android.support.Preferences;
 
 import android.util.Log;
 
@@ -147,7 +150,8 @@ public class LocationMessage extends Message{
     }
 
     private static JSONObject fpeEncryption(JSONObject json) {
-        if (true) {
+        System.out.println("Preferences.getEnc(): " + Preferences.getEnc());
+        if (Preferences.getEnc()){
             Key key = new Key(new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22});
             byte[] tweak = new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22};
             json = org.owntracks.android.support.FormatPreservingEncryption.encrypt(json, key, tweak);
@@ -155,11 +159,23 @@ public class LocationMessage extends Message{
         return json;
     }
 
-    private static JSONObject fpeDecryption(JSONObject json) {
-        if (true) {
+    private  JSONObject fpeDecryption(JSONObject json) {
+
+        String topic = getTopic();
+        String user = topic.substring(topic.indexOf("/") + 1, topic.lastIndexOf("/"));
+        String password = FormatPreservingEncryption.loadPassword(user);
+
+        if(!password.isEmpty()) {
+            Key key = new Key(password.getBytes(Charset.forName("UTF-8")));
+            byte[] tweak = user.getBytes(Charset.forName("UTF-8"));
+            json = FormatPreservingEncryption.decrypt(json, key, tweak);
+        }
+
+
+        if (false) {
             Key key = new Key(new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22});
             byte[] tweak = new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22};
-            json = org.owntracks.android.support.FormatPreservingEncryption.decrypt(json, key, tweak);
+            json = FormatPreservingEncryption.decrypt(json, key, tweak);
         }
         return json;
     }
