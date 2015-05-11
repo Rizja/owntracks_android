@@ -16,6 +16,7 @@ import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 import android.util.Log;
 
+import ch.bfh.fpelib.Key;
 import com.crashlytics.android.Crashlytics;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
@@ -40,6 +41,7 @@ import org.owntracks.android.messages.LocationMessage;
 import org.owntracks.android.messages.Message;
 import org.owntracks.android.model.Contact;
 import org.owntracks.android.support.Events;
+import org.owntracks.android.support.FormatPreservingEncryption;
 import org.owntracks.android.support.MessageCallbacks;
 import org.owntracks.android.support.Preferences;
 
@@ -677,7 +679,13 @@ public class ServiceBroker implements MqttCallback, ProxyableService {
                     return;
                 }
 
-                message.setPayload(message.toString().getBytes(Charset.forName("UTF-8")));
+                String payload = message.toString();
+                if (Preferences.getEnc()){ //encrypt payload if fpe is enabled
+                    Key key = new Key(new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22});
+                    byte[] tweak = new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22};
+                    payload = FormatPreservingEncryption.encrypt(payload, key, tweak);
+                }
+                message.setPayload(payload.getBytes(Charset.forName("UTF-8")));
 
                 try {
 
@@ -769,6 +777,16 @@ public class ServiceBroker implements MqttCallback, ProxyableService {
             Log.e(this.toString(), "Received invalid message: " + msg);
             return;
 		}
+
+        if(Preferences.getEnc()) { //decrypt if fpe is enabled...
+            String user = topic.split("/")[1];
+            String password = FormatPreservingEncryption.loadPassword(user);
+            if (password != null) { //...and key available for publisher of message
+                Key key = new Key(password.getBytes(Charset.forName("UTF-8")));
+                byte[] tweak = user.getBytes(Charset.forName("UTF-8"));
+                json = FormatPreservingEncryption.decrypt(json, key, tweak);
+            }
+        }
 
 		if (type.equals("location")) {
             LocationMessage lm = new LocationMessage(json);

@@ -50,9 +50,20 @@ public class FormatPreservingEncryption {
     public static final RankThenEncipher<String> LON = new RankThenEncipher<>(LON_MS);
     public static final FFXIntegerCipher TST = new FFXIntegerCipher(TST_MAX);
 
+    public static String encrypt(String jsonMessage, Key key, byte[] tweak) {
+        try {
+            JSONObject json = new JSONObject(jsonMessage);
+            return encrypt(json, key, tweak).toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public static JSONObject encrypt(JSONObject json, Key key, byte[] tweak) {
         if (!json.optString("_type").matches(TYPES_IMPLEMENTED)) {
-            throw new RuntimeException("Encryption of message type '" + json.optString("_type") + "' is not implemented.");
+            //if message type not supported return original
+            return json;
         }
         JSONObject encryptedJson = new JSONObject();
         Iterator<String> entries = json.keys();
@@ -98,7 +109,8 @@ public class FormatPreservingEncryption {
 
     public static JSONObject decrypt(JSONObject json, Key key, byte[] tweak) {
         if (!json.optString("_type").matches(TYPES_IMPLEMENTED)) {
-            throw new RuntimeException("Decryption of message type '" + json.optString("_type") + "' is not implemented.");
+            //if message type not supported return original
+            return json;
         }
         JSONObject decryptedJson = new JSONObject();
         Iterator<String> entries = json.keys();
