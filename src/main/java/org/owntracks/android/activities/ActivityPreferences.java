@@ -2,6 +2,7 @@ package org.owntracks.android.activities;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -21,13 +22,20 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.CheckedTextView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Switch;
+import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.afollestad.materialdialogs.prefs.MaterialEditTextPreference;
@@ -61,6 +69,7 @@ public class ActivityPreferences extends ActionBarActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         final Context context = this;
+
 
         setContentView(R.layout.activity_preferences);
         Toolbar toolbar = (Toolbar) findViewById(R.id.fragmentToolbar);
@@ -461,12 +470,9 @@ public class ActivityPreferences extends ActionBarActivity {
                                     });
 
 
+                                    // Encryption
                                     final Switch enc = (Switch) d.findViewById(R.id.fpeEncryption);
                                     enc.setChecked(encVal);
-                                    //final MaterialEditText fpePassword = (MaterialEditText) d.findViewById(R.id.fpePassword);
-                                    //fpePassword.setVisibility(encVal ? View.VISIBLE : View.GONE);
-                                    //enc.setText(Preferences.getTlsCrtPath());
-
                                     enc.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                                         @Override
                                         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -487,11 +493,8 @@ public class ActivityPreferences extends ActionBarActivity {
                                                                         if (fpePassword.isEmpty()) //if no password is entered, disable encryption
                                                                             enc.setChecked(false);
                                                                         else {
-                                                                            FormatPreservingEncryption.loadPassword("ownKey");
                                                                             FormatPreservingEncryption.storePassword("ownKey", fpePassword);
-                                                                          //  FormatPreservingEncryption.deletePassword("ownKey");
-                                                                           FormatPreservingEncryption.loadPassword("ownKey");
-                                                                        }
+                                                            }
                                                             }
                                                         })
                                                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -500,7 +503,97 @@ public class ActivityPreferences extends ActionBarActivity {
                                                     }
                                                 }).show();
                                             }
+
+
+
                                         }
+                                    });
+
+
+                                    //Manage User / passwords
+                                    final TextView manageUser = (TextView) d.findViewById(R.id.manageUser);
+                                    manageUser.setOnClickListener(new View.OnClickListener() {
+
+                                        @Override
+                                        public void onClick(View v) {
+                                            final Dialog dialog = new Dialog(a);
+                                            dialog.setContentView(R.layout.preferences_security_userlist);
+                                            dialog.setTitle("User with stored passwords");
+                                            final ListView userList = (ListView) dialog.findViewById(R.id.lstUser);
+
+                                            //Load User-List
+                                            final String[] users = FormatPreservingEncryption.loadUsers();
+                                            final ArrayAdapter<String>  adapter = new ArrayAdapter<String>(a, android.R.layout.simple_list_item_multiple_choice, FormatPreservingEncryption.loadUsers());
+
+                                            if(users != null && users.length >0){
+                                                userList.setAdapter(adapter);
+                                            }
+
+
+                                            //Delete-Button
+                                            final Button btnDelete = (Button) dialog.findViewById(R.id.btnDelete);
+                                            btnDelete.setOnClickListener(new View.OnClickListener() {
+
+                                                @Override
+                                                public void onClick(View v) {
+                                                    SparseBooleanArray checked = userList.getCheckedItemPositions();
+                                                    for (int i = 0; i < userList.getCount(); i++) {
+                                                        if (checked.get(i)) {
+                                                            FormatPreservingEncryption.deletePassword(users[i]);
+                                                            adapter.notifyDataSetChanged();
+                                                            userList.invalidateViews();
+                                                        }
+
+                                                    }
+                                                }
+                                            });
+
+                                            //Add-Button
+                                            final Button btnAdd = (Button) dialog.findViewById(R.id.btnAdd);
+                                            btnAdd.setOnClickListener(new View.OnClickListener() {
+
+                                                @Override
+                                                public void onClick(View v) {
+                                                    LinearLayout lila1= new LinearLayout(a);
+                                                    lila1.setOrientation(LinearLayout.VERTICAL);
+                                                    final EditText inputName = new EditText(a);
+                                                    final EditText inputPW = new EditText(a);
+                                                    inputName.setHint("Username");
+                                                    inputPW.setHint("Password");
+                                                    inputPW.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                                                    lila1.addView(inputName);
+                                                    lila1.addView(inputPW);
+
+
+                                                    new AlertDialog.Builder(a)
+                                                            .setTitle("Add new User")
+                                                            .setMessage("Enter username and password to decrypt location of this user:")
+                                                            .setView(lila1)
+                                                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                                public void onClick(DialogInterface dialog, int whichButton) {
+                                                                    String  username = inputName.getText().toString();
+                                                                    String  password = inputPW.getText().toString();
+
+                                                                    if (username != null && password != null ) {
+                                                                        FormatPreservingEncryption.storePassword(username, password);
+
+                                                                       // adapter.notifyDataSetChanged();
+                                                                        userList.invalidateViews();
+                                                                    }
+                                                                }
+                                                            })
+                                                            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                                                public void onClick(DialogInterface dialog, int whichButton) {
+                                                                }
+                                                            }).show();
+                                                }
+                                             } );
+
+
+                                            dialog.show();
+
+                                        }
+
                                     });
 
 
@@ -622,8 +715,7 @@ public class ActivityPreferences extends ActionBarActivity {
             pubTopicBase.setHint(Preferences.getPubTopicFallback());
         }
 
-
-    }
+      }
 }
 
 

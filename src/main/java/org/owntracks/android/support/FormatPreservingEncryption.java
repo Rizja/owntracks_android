@@ -20,6 +20,8 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -154,10 +156,6 @@ public class FormatPreservingEncryption {
         return decryptedJson;
     }
 
-    private static void loadPasswords() {
-
-
-    }
     public static void storePassword(String username, String password) {
         deletePassword(username); //First remove old password of user if exists, before storing the new one
         HashSet<String> userPWs = new HashSet<String>(Preferences.getSharedPreferences().getStringSet("userPasswords", new HashSet<String>()));
@@ -190,6 +188,18 @@ public class FormatPreservingEncryption {
             }
         }
         return null;
+    }
+
+    public static String[] loadUsers() {
+        HashSet<String> userSet = new HashSet<String>(Preferences.getSharedPreferences().getStringSet("userPasswords", new HashSet<String>()));
+        String[] users = userSet.toArray(new String[userSet.size()]);
+
+        for (int i=0;i<users.length;i++) {
+            users[i] = users[i].substring(0, users[i].indexOf("$"));
+        }
+        System.out.println("users: " + Arrays.toString(users));
+   return users;
+
     }
 
 }
