@@ -10,12 +10,10 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -29,7 +27,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.CheckedTextView;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -38,7 +35,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.afollestad.materialdialogs.MaterialDialog;
-import com.afollestad.materialdialogs.prefs.MaterialEditTextPreference;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.rengwuxian.materialedittext.MaterialEditText;
@@ -53,16 +49,6 @@ import org.owntracks.android.support.DrawerFactory;
 import org.owntracks.android.support.Events;
 import org.owntracks.android.support.FormatPreservingEncryption;
 import org.owntracks.android.support.Preferences;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-
-import javax.crypto.EncryptedPrivateKeyInfo;
-import javax.crypto.spec.SecretKeySpec;
 
 public class ActivityPreferences extends ActionBarActivity {
     @Override
@@ -477,7 +463,6 @@ public class ActivityPreferences extends ActionBarActivity {
                                         @Override
                                         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                                             encVal = isChecked;
-                                            //fpePassword.setVisibility(encVal ? View.VISIBLE : View.GONE);
 
                                             if(encVal) { //encryption enabled
                                                 final EditText input = new EditText(a);
@@ -493,7 +478,8 @@ public class ActivityPreferences extends ActionBarActivity {
                                                                         if (fpePassword.isEmpty()) //if no password is entered, disable encryption
                                                                             enc.setChecked(false);
                                                                         else {
-                                                                            FormatPreservingEncryption.storePassword("ownKey", fpePassword);
+                                                                            FormatPreservingEncryption.storePassword(Preferences.getUsername(), fpePassword);
+
                                                             }
                                                             }
                                                         })
@@ -503,14 +489,11 @@ public class ActivityPreferences extends ActionBarActivity {
                                                     }
                                                 }).show();
                                             }
-
-
-
                                         }
                                     });
 
 
-                                    //Manage User / passwords
+                                    //Manage User / Passwords
                                     final TextView manageUser = (TextView) d.findViewById(R.id.manageUser);
                                     manageUser.setOnClickListener(new View.OnClickListener() {
 
@@ -522,31 +505,8 @@ public class ActivityPreferences extends ActionBarActivity {
                                             final ListView userList = (ListView) dialog.findViewById(R.id.lstUser);
 
                                             //Load User-List
-                                            final String[] users = FormatPreservingEncryption.loadUsers();
                                             final ArrayAdapter<String>  adapter = new ArrayAdapter<String>(a, android.R.layout.simple_list_item_multiple_choice, FormatPreservingEncryption.loadUsers());
-
-                                            if(users != null && users.length >0){
-                                                userList.setAdapter(adapter);
-                                            }
-
-
-                                            //Delete-Button
-                                            final Button btnDelete = (Button) dialog.findViewById(R.id.btnDelete);
-                                            btnDelete.setOnClickListener(new View.OnClickListener() {
-
-                                                @Override
-                                                public void onClick(View v) {
-                                                    SparseBooleanArray checked = userList.getCheckedItemPositions();
-                                                    for (int i = 0; i < userList.getCount(); i++) {
-                                                        if (checked.get(i)) {
-                                                            FormatPreservingEncryption.deletePassword(users[i]);
-                                                            adapter.notifyDataSetChanged();
-                                                            userList.invalidateViews();
-                                                        }
-
-                                                    }
-                                                }
-                                            });
+                                            if(adapter != null && adapter.getCount() > 0) userList.setAdapter(adapter);
 
                                             //Add-Button
                                             final Button btnAdd = (Button) dialog.findViewById(R.id.btnAdd);
@@ -576,10 +536,17 @@ public class ActivityPreferences extends ActionBarActivity {
 
                                                                     if (username != null && password != null ) {
                                                                         FormatPreservingEncryption.storePassword(username, password);
-
-                                                                       // adapter.notifyDataSetChanged();
-                                                                        userList.invalidateViews();
                                                                     }
+
+
+                                                                    new AlertDialog.Builder(a)
+                                                                            .setTitle("Add")
+                                                                            .setMessage("New user " + username +" successfully added")
+                                                                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                                                public void onClick(DialogInterface dialog, int whichButton) {
+                                                                                    dialog.dismiss();
+                                                                                }
+                                                                            }).show();
                                                                 }
                                                             })
                                                             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -589,6 +556,34 @@ public class ActivityPreferences extends ActionBarActivity {
                                                 }
                                              } );
 
+
+                                            //Delete-Button
+                                            final Button btnDelete = (Button) dialog.findViewById(R.id.btnDelete);
+                                            btnDelete.setOnClickListener(new View.OnClickListener() {
+
+                                                @Override
+                                                public void onClick(View v) {
+                                                    SparseBooleanArray checked = userList.getCheckedItemPositions();
+                                                    ArrayAdapter adapter = (ArrayAdapter)userList.getAdapter();
+                                                    for (int i = 0; i < userList.getCount(); i++) {
+                                                        if (checked.get(i)) {
+                                                            if(!adapter.getItem(i).equals(Preferences.getUsername())){ //don't delete own user
+                                                                FormatPreservingEncryption.deletePassword(adapter.getItem(i).toString());
+                                                            }
+                                                        }
+                                                    }
+
+                                                    new AlertDialog.Builder(a)
+                                                            .setTitle("Delete")
+                                                    .setMessage("All selected entries have been deleted:")
+                                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                        public void onClick(DialogInterface dialog, int whichButton) {
+                                                            dialog.dismiss();
+                                                        }
+                                                    }).show();
+                                                }
+
+                                            });
 
                                             dialog.show();
 
