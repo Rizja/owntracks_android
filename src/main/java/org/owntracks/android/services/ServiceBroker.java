@@ -680,9 +680,11 @@ public class ServiceBroker implements MqttCallback, ProxyableService {
                 }
 
                 String payload = message.toString();
-                if (Preferences.getEnc()){ //encrypt payload if fpe is enabled
-                    Key key = new Key(new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22});
-                    byte[] tweak = new byte[]{64,93,-94,-128,0,127,23,43,-19,120,86,94,-62,101,14,22};
+                if (Preferences.getEnc() && message.getTopic() != null){ //encrypt payload if fpe is enabled
+                    String user = message.getTopic().split("/")[1];
+                    String password = FormatPreservingEncryption.loadPassword(user);
+                    Key key = new Key(password.getBytes(Charset.forName("UTF-8")));
+                    byte[] tweak = user.getBytes(Charset.forName("UTF-8"));
                     payload = FormatPreservingEncryption.encrypt(payload, key, tweak);
                 }
                 message.setPayload(payload.getBytes(Charset.forName("UTF-8")));
