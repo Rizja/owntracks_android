@@ -509,7 +509,9 @@ public class ActivityPreferences extends ActionBarActivity {
 
                                             //Load User-List
                                             final ArrayAdapter<String> adapter = new ArrayAdapter<String>(a, android.R.layout.simple_list_item_multiple_choice, new ArrayList<String>(Arrays.asList(FormatPreservingEncryption.loadUsers())));
-                                            if (adapter != null && adapter.getCount() > 0) userList.setAdapter(adapter);
+                                            adapter.remove(Preferences.getUsername());
+                                            if (adapter != null) userList.setAdapter(adapter);
+
 
                                             //Add-Button
                                             final Button btnAdd = (Button) dialog.findViewById(R.id.btnAdd);
@@ -538,9 +540,11 @@ public class ActivityPreferences extends ActionBarActivity {
                                                                     String password = inputPW.getText().toString();
 
                                                                     if (!username.isEmpty() && !password.isEmpty()) {
+                                                                        username = username.trim();
                                                                         FormatPreservingEncryption.storePassword(username, password);
                                                                         adapter.clear();
                                                                         adapter.addAll(Arrays.asList(FormatPreservingEncryption.loadUsers()));
+                                                                        adapter.remove(Preferences.getUsername());
                                                                         new AlertDialog.Builder(a)
                                                                                 .setTitle("Add")
                                                                                 .setMessage("New user " + username + " successfully added")
@@ -586,6 +590,7 @@ public class ActivityPreferences extends ActionBarActivity {
                                                     }
                                                     adapter.clear();
                                                     adapter.addAll(Arrays.asList(FormatPreservingEncryption.loadUsers()));
+                                                    adapter.remove(Preferences.getUsername());
                                                     adapter.notifyDataSetChanged();
                                                     new AlertDialog.Builder(a)
                                                             .setTitle("Delete")
