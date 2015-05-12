@@ -182,7 +182,8 @@ public class FormatPreservingEncryption {
 
         for (String userPW : userPWs) {
             System.out.println("userPW: " + userPW);
-            if (userPW.contains(username)) {
+            String userPWLowerCase = userPW.toLowerCase();
+            if (userPWLowerCase.contains(username.toLowerCase())) {
                 password = userPW.substring(userPW.indexOf("$") + 1);
                return password;
             }
