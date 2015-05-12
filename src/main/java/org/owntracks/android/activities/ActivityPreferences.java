@@ -50,6 +50,9 @@ import org.owntracks.android.support.Events;
 import org.owntracks.android.support.FormatPreservingEncryption;
 import org.owntracks.android.support.Preferences;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 public class ActivityPreferences extends ActionBarActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -464,7 +467,7 @@ public class ActivityPreferences extends ActionBarActivity {
                                         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                                             encVal = isChecked;
 
-                                            if(encVal) { //encryption enabled
+                                            if (encVal) { //encryption enabled
                                                 final EditText input = new EditText(a);
                                                 input.setTransformationMethod(PasswordTransformationMethod.getInstance());
 
@@ -474,20 +477,20 @@ public class ActivityPreferences extends ActionBarActivity {
                                                         .setView(input)
                                                         .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                                             public void onClick(DialogInterface dialog, int whichButton) {
-                                                                String  fpePassword = input.getText().toString();
-                                                                        if (fpePassword.isEmpty()) //if no password is entered, disable encryption
-                                                                            enc.setChecked(false);
-                                                                        else {
-                                                                            FormatPreservingEncryption.storePassword(Preferences.getUsername(), fpePassword);
+                                                                String fpePassword = input.getText().toString();
+                                                                if (fpePassword.isEmpty()) //if no password is entered, disable encryption
+                                                                    enc.setChecked(false);
+                                                                else {
+                                                                    FormatPreservingEncryption.storePassword(Preferences.getUsername(), fpePassword);
 
-                                                            }
+                                                                }
                                                             }
                                                         })
                                                         .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                                                             public void onClick(DialogInterface dialog, int whichButton) {
                                                                 enc.setChecked(false); //if password entry is cancelled, disable encryption
-                                                    }
-                                                }).show();
+                                                            }
+                                                        }).show();
                                             }
                                         }
                                     });
@@ -505,8 +508,8 @@ public class ActivityPreferences extends ActionBarActivity {
                                             final ListView userList = (ListView) dialog.findViewById(R.id.lstUser);
 
                                             //Load User-List
-                                            final ArrayAdapter<String>  adapter = new ArrayAdapter<String>(a, android.R.layout.simple_list_item_multiple_choice, FormatPreservingEncryption.loadUsers());
-                                            if(adapter != null && adapter.getCount() > 0) userList.setAdapter(adapter);
+                                            final ArrayAdapter<String> adapter = new ArrayAdapter<String>(a, android.R.layout.simple_list_item_multiple_choice, new ArrayList<String>(Arrays.asList(FormatPreservingEncryption.loadUsers())));
+                                            if (adapter != null && adapter.getCount() > 0) userList.setAdapter(adapter);
 
                                             //Add-Button
                                             final Button btnAdd = (Button) dialog.findViewById(R.id.btnAdd);
@@ -514,7 +517,7 @@ public class ActivityPreferences extends ActionBarActivity {
 
                                                 @Override
                                                 public void onClick(View v) {
-                                                    LinearLayout lila1= new LinearLayout(a);
+                                                    LinearLayout lila1 = new LinearLayout(a);
                                                     lila1.setOrientation(LinearLayout.VERTICAL);
                                                     final EditText inputName = new EditText(a);
                                                     final EditText inputPW = new EditText(a);
@@ -531,22 +534,31 @@ public class ActivityPreferences extends ActionBarActivity {
                                                             .setView(lila1)
                                                             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                                                 public void onClick(DialogInterface dialog, int whichButton) {
-                                                                    String  username = inputName.getText().toString();
-                                                                    String  password = inputPW.getText().toString();
+                                                                    String username = inputName.getText().toString();
+                                                                    String password = inputPW.getText().toString();
 
-                                                                    if (username != null && password != null ) {
+                                                                    if (!username.isEmpty() && !password.isEmpty()) {
                                                                         FormatPreservingEncryption.storePassword(username, password);
+                                                                        adapter.clear();
+                                                                        adapter.addAll(Arrays.asList(FormatPreservingEncryption.loadUsers()));
+                                                                        new AlertDialog.Builder(a)
+                                                                                .setTitle("Add")
+                                                                                .setMessage("New user " + username + " successfully added")
+                                                                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                                                    public void onClick(DialogInterface dialog, int whichButton) {
+                                                                                        dialog.dismiss();
+                                                                                    }
+                                                                                }).show();
+                                                                    } else {
+                                                                        new AlertDialog.Builder(a)
+                                                                                .setTitle("Add")
+                                                                                .setMessage("Username and password must not be empty.")
+                                                                                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                                                    public void onClick(DialogInterface dialog, int whichButton) {
+                                                                                        dialog.dismiss();
+                                                                                    }
+                                                                                }).show();
                                                                     }
-
-
-                                                                    new AlertDialog.Builder(a)
-                                                                            .setTitle("Add")
-                                                                            .setMessage("New user " + username +" successfully added")
-                                                                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                                                                public void onClick(DialogInterface dialog, int whichButton) {
-                                                                                    dialog.dismiss();
-                                                                                }
-                                                                            }).show();
                                                                 }
                                                             })
                                                             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
@@ -554,7 +566,7 @@ public class ActivityPreferences extends ActionBarActivity {
                                                                 }
                                                             }).show();
                                                 }
-                                             } );
+                                            });
 
 
                                             //Delete-Button
@@ -564,23 +576,25 @@ public class ActivityPreferences extends ActionBarActivity {
                                                 @Override
                                                 public void onClick(View v) {
                                                     SparseBooleanArray checked = userList.getCheckedItemPositions();
-                                                    ArrayAdapter adapter = (ArrayAdapter)userList.getAdapter();
+                                                    ArrayAdapter adapter = (ArrayAdapter) userList.getAdapter();
                                                     for (int i = 0; i < userList.getCount(); i++) {
                                                         if (checked.get(i)) {
-                                                            if(!adapter.getItem(i).equals(Preferences.getUsername())){ //don't delete own user
+                                                            if (!adapter.getItem(i).equals(Preferences.getUsername())) { //don't delete own user
                                                                 FormatPreservingEncryption.deletePassword(adapter.getItem(i).toString());
                                                             }
                                                         }
                                                     }
-
+                                                    adapter.clear();
+                                                    adapter.addAll(Arrays.asList(FormatPreservingEncryption.loadUsers()));
+                                                    adapter.notifyDataSetChanged();
                                                     new AlertDialog.Builder(a)
                                                             .setTitle("Delete")
-                                                    .setMessage("All selected entries have been deleted:")
-                                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                                                        public void onClick(DialogInterface dialog, int whichButton) {
-                                                            dialog.dismiss();
-                                                        }
-                                                    }).show();
+                                                            .setMessage("All selected entries have been deleted.")
+                                                            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                                                public void onClick(DialogInterface dialog, int whichButton) {
+                                                                    dialog.dismiss();
+                                                                }
+                                                            }).show();
                                                 }
 
                                             });
