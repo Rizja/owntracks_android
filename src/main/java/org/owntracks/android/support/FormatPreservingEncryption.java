@@ -90,6 +90,7 @@ public class FormatPreservingEncryption {
                         } catch (GeneralSecurityException e) {
                             throw new RuntimeException("Unexpected exception. " + e.getMessage());
                         }
+                        break;
                     case "lat":
                         value = LAT.encrypt(json.getString(entry), key, tweak); break;
                     case "lon":
@@ -137,6 +138,7 @@ public class FormatPreservingEncryption {
                         } catch (GeneralSecurityException e) {
                             throw new RuntimeException("Unexpected exception. " + e.getMessage());
                         }
+                        break;
                     case "lat":
                         value = LAT.decrypt(json.getString(entry), key, tweak); break;
                     case "lon":
