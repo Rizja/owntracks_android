@@ -52,10 +52,9 @@ public class FormatPreservingEncryption {
     public static final RankThenEncipher<String> LON = new RankThenEncipher<>(LON_MS);
     public static final FFXIntegerCipher TST = new FFXIntegerCipher(TST_MAX);
 
-    public static String encrypt(String jsonMessage, Key key, byte[] tweak) {
+    public static JSONObject getJsonMessage(String jsonMessage) {
         try {
-            JSONObject json = new JSONObject(jsonMessage);
-            return encrypt(json, key, tweak).toString();
+            return new JSONObject(jsonMessage);
         } catch (JSONException e) {
             e.printStackTrace();
             return null;
@@ -95,7 +94,6 @@ public class FormatPreservingEncryption {
                         value = LAT.encrypt(json.getString(entry), key, tweak); break;
                     case "lon":
                         value = LON.encrypt(json.getString(entry), key, tweak); break;
-                    case "tst":
                     case "wtst":
                         value = TST.encrypt(BigInteger.valueOf(json.getLong(entry)), key, tweak).longValue(); break;
                     default: //all other entries are not encrypted
@@ -143,7 +141,6 @@ public class FormatPreservingEncryption {
                         value = LAT.decrypt(json.getString(entry), key, tweak); break;
                     case "lon":
                         value = LON.decrypt(json.getString(entry), key, tweak); break;
-                    case "tst":
                     case "wtst":
                         value = TST.decrypt(BigInteger.valueOf(json.getLong(entry)), key, tweak).longValue(); break;
                     default: //all other entries are not decrypted
@@ -158,7 +155,7 @@ public class FormatPreservingEncryption {
         return decryptedJson;
     }
 
-    public static void storePassword(String username, String password) {
+    public static void setPassword(String username, String password) {
         deletePassword(username); //First remove old password of user if exists, before storing the new one
         HashSet<String> userPWs = new HashSet<String>(Preferences.getSharedPreferences().getStringSet("userPasswords", new HashSet<String>()));
         userPWs.add(username + "$" + password);
@@ -178,7 +175,7 @@ public class FormatPreservingEncryption {
     }
 
 
-    public static String loadPassword(String username) {
+    public static String getPassword(String username) {
         HashSet<String> userPWs = new HashSet<String>(Preferences.getSharedPreferences().getStringSet("userPasswords", new HashSet<String>()));
         String password = "";
 

@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
@@ -17,7 +16,6 @@ import android.os.PowerManager.WakeLock;
 import android.util.Log;
 
 import ch.bfh.fpelib.Key;
-import com.crashlytics.android.Crashlytics;
 
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -64,9 +62,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -679,15 +675,15 @@ public class ServiceBroker implements MqttCallback, ProxyableService {
                     return;
                 }
 
-                String payload = message.toString();
+                JSONObject json = FormatPreservingEncryption.getJsonMessage(message.toString());
                 if (Preferences.getEnc() && message.getTopic() != null){ //encrypt payload if fpe is enabled
                     String user = message.getTopic().split("/")[1];
-                    String password = FormatPreservingEncryption.loadPassword(user);
+                    String password = FormatPreservingEncryption.getPassword(user);
                     Key key = new Key(password.getBytes(Charset.forName("UTF-8")));
-                    byte[] tweak = user.getBytes(Charset.forName("UTF-8"));
-                    payload = FormatPreservingEncryption.encrypt(payload, key, tweak);
+                    byte[] tweak = (message.getTopic()+json.optString("tst")).getBytes(Charset.forName("UTF-8"));
+                    json = FormatPreservingEncryption.encrypt(json, key, tweak);
                 }
-                message.setPayload(payload.getBytes(Charset.forName("UTF-8")));
+                message.setPayload(json.toString().getBytes(Charset.forName("UTF-8")));
 
                 try {
 
@@ -781,11 +777,10 @@ public class ServiceBroker implements MqttCallback, ProxyableService {
 		}
 
         String user = topic.split("/")[1];
-        String password = FormatPreservingEncryption.loadPassword(user);
-        if ((password != null && !user.equals(Preferences.getUsername())) || //decrypt if key available for publisher of message...
-            (Preferences.getEnc() && user.equals(Preferences.getUsername()))) { //...or own message and FPE enabled
+        String password = FormatPreservingEncryption.getPassword(user);
+        if (password != null) { //decrypt if key available for publisher of message
             Key key = new Key(password.getBytes(Charset.forName("UTF-8")));
-            byte[] tweak = user.getBytes(Charset.forName("UTF-8"));
+            byte[] tweak = (topic+json.optString("tst")).getBytes(Charset.forName("UTF-8"));
             json = FormatPreservingEncryption.decrypt(json, key, tweak);
         }
 

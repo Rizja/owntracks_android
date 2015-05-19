@@ -481,7 +481,7 @@ public class ActivityPreferences extends ActionBarActivity {
                                                                 if (fpePassword.isEmpty()) //if no password is entered, disable encryption
                                                                     enc.setChecked(false);
                                                                 else {
-                                                                    FormatPreservingEncryption.storePassword(Preferences.getUsername(), fpePassword);
+                                                                    FormatPreservingEncryption.setPassword(Preferences.getUsername(), fpePassword);
 
                                                                 }
                                                             }
@@ -491,6 +491,8 @@ public class ActivityPreferences extends ActionBarActivity {
                                                                 enc.setChecked(false); //if password entry is cancelled, disable encryption
                                                             }
                                                         }).show();
+                                            } else {
+                                                FormatPreservingEncryption.deletePassword(Preferences.getUsername());
                                             }
                                         }
                                     });
@@ -541,7 +543,7 @@ public class ActivityPreferences extends ActionBarActivity {
 
                                                                     if (!username.isEmpty() && !password.isEmpty()) {
                                                                         username = username.trim();
-                                                                        FormatPreservingEncryption.storePassword(username, password);
+                                                                        FormatPreservingEncryption.setPassword(username, password);
                                                                         adapter.clear();
                                                                         adapter.addAll(Arrays.asList(FormatPreservingEncryption.loadUsers()));
                                                                         adapter.remove(Preferences.getUsername());
@@ -550,7 +552,6 @@ public class ActivityPreferences extends ActionBarActivity {
                                                                                 .setMessage("New user " + username + " successfully added")
                                                                                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                                                                     public void onClick(DialogInterface dialog, int whichButton) {
-                                                                                        dialog.dismiss();
                                                                                     }
                                                                                 }).show();
                                                                     } else {
@@ -559,7 +560,6 @@ public class ActivityPreferences extends ActionBarActivity {
                                                                                 .setMessage("Username and password must not be empty.")
                                                                                 .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                                                                     public void onClick(DialogInterface dialog, int whichButton) {
-                                                                                        dialog.dismiss();
                                                                                     }
                                                                                 }).show();
                                                                     }
@@ -597,7 +597,6 @@ public class ActivityPreferences extends ActionBarActivity {
                                                             .setMessage("All selected entries have been deleted.")
                                                             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                                                                 public void onClick(DialogInterface dialog, int whichButton) {
-                                                                    dialog.dismiss();
                                                                 }
                                                             }).show();
                                                 }
