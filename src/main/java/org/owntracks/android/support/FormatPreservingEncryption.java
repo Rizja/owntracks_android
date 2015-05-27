@@ -50,7 +50,7 @@ public class FormatPreservingEncryption {
 
 
     /**
-     * Returns a new JSONObject to a given string
+     * Creates a new JSONObject from a JSON string
      * @param jsonMessage JSON message as string
      * @return JSON object
      */
@@ -189,7 +189,7 @@ public class FormatPreservingEncryption {
     /**
      * Stores username and password in the SharedPreferences
      * @param username Username to store
-     * @param password Password according to usernam
+     * @param password Password according to username
      */
     public static void setPassword(String username, String password) {
         deletePassword(username); //First remove old password of user if exists, before storing the new one
@@ -200,8 +200,8 @@ public class FormatPreservingEncryption {
 
 
     /**
-     * Deletes username and password of a given user in the SharedPreferences
-     * @param username Username to delete
+     * Deletes username and password of a given user from the SharedPreferences
+     * @param username User to delete
      */
     public static void deletePassword(String username) {
         HashSet<String> userPWs = new HashSet<String>(Preferences.getSharedPreferences().getStringSet("userPasswords", new HashSet<String>()));
@@ -216,7 +216,7 @@ public class FormatPreservingEncryption {
 
 
     /**
-     * Returns the password to a given user
+     * Returns the password of a given user
      * @param username User of the password
      * @return Password of the user
      */
@@ -225,7 +225,6 @@ public class FormatPreservingEncryption {
         String password = "";
 
         for (String userPW : userPWs) {
-            System.out.println("userPW: " + userPW);
             String userPWLowerCase = userPW.toLowerCase();
             if (userPWLowerCase.contains(username.toLowerCase())) {
                 password = userPW.substring(userPW.indexOf("$") + 1);
@@ -247,7 +246,6 @@ public class FormatPreservingEncryption {
         for (int i = 0; i < users.length; i++) {
             users[i] = users[i].substring(0, users[i].indexOf("$"));
         }
-        System.out.println("users: " + Arrays.toString(users));
         return users;
     }
 }
