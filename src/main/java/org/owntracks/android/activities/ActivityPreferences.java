@@ -23,6 +23,7 @@ import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
@@ -469,7 +470,9 @@ public class ActivityPreferences extends ActionBarActivity {
 
                                             if (encVal) { //encryption enabled
                                                 final EditText input = new EditText(a);
-                                                input.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                                                input.setInputType(input.getInputType()
+                                                        | EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+                                                        | EditorInfo.TYPE_TEXT_VARIATION_FILTER);
 
                                                 new AlertDialog.Builder(a)
                                                         .setTitle("Password")
@@ -525,9 +528,11 @@ public class ActivityPreferences extends ActionBarActivity {
                                                     lila1.setOrientation(LinearLayout.VERTICAL);
                                                     final EditText inputName = new EditText(a);
                                                     final EditText inputPW = new EditText(a);
+                                                    inputPW.setInputType(inputPW.getInputType()
+                                                            | EditorInfo.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+                                                            | EditorInfo.TYPE_TEXT_VARIATION_FILTER);
                                                     inputName.setHint("Username");
                                                     inputPW.setHint("Password");
-                                                    inputPW.setTransformationMethod(PasswordTransformationMethod.getInstance());
                                                     lila1.addView(inputName);
                                                     lila1.addView(inputPW);
 
